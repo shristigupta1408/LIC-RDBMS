@@ -1,0 +1,445 @@
+#LIC DATABASE MANAGEMENT SYSTEM
+
+
+#importing required modules for SQL interface and other functions
+
+
+import mysql.connector
+
+mydb= mysql.connector.connect(
+    host="localhost",
+    user="root",
+    passwd="1234",
+    database="lic_rdbms")
+
+mycursor=mydb.cursor()
+
+
+#CREATING DATABASE
+
+
+mycursor.execute("CREATE DATABASE IF NOT EXISTS lic_rdbms")
+
+
+
+#CREATING TABLES FOR STORING RECORDS
+
+
+mycursor.execute("CREATE TABLE IF NOT EXISTS Policies (PlanType VARCHAR(250)PRIMARY KEY,SumAssured VARCHAR(250),Premium VARCHAR(10),Term VARCHAR(250));")
+
+mycursor.execute("CREATE TABLE IF NOT EXISTS user (username VARCHAR(50) PRIMARY KEY,password VARCHAR(20), fname VARCHAR(20), lname VARCHAR(20), address VARCHAR(100),phone VARCHAR(10),annual_income VARCHAR(15), aadhar VARCHAR(16),age VARCHAR(3));")
+
+mycursor.execute("CREATE TABLE IF NOT EXISTS admin(admin_id int(5) primary key,admin_name varchar(20),password varchar(10),admin_email varchar(50))")
+
+mycursor.execute("CREATE TABLE IF NOT EXISTS plan_chosen(username VARCHAR(50) REFERENCES user(username), PType VARCHAR(250))")
+
+
+
+#CHOICES 
+
+
+print("WELCOME TO THE LIC MANAGEMENT SYSTEM. PLEASE SELECT ONE OF THE FOLLOWING OPTIONS TO CONTINUE : \n")
+
+print("Press 1 for admin registration")
+
+print("Press 2 for admin login")
+
+print("Press 3 for user login")
+
+print("Press 4 for user registration")
+
+ch=int(input("enter your choice"))
+
+
+#-------------------------------
+#This menu is shown to the subscriber/admin upon initiation of the program.
+#
+#It allows user/admin to login or sign up
+#-------------------------------
+
+
+        
+    
+if (ch==1):
+
+    print("To login as admin, enter password")
+    
+    mp=input("Enter masterpassword")
+    
+
+    #Administrator registration
+
+    if(mp=="corplic"):
+        
+        print("Access authorised")
+
+        name=input("Enter your Name : ")
+        
+        adminid=input("Enter your ID : ")
+        
+        password=input("Enter your Password : ")
+        
+        adminemail=input("Enter your Email ID : ")
+        
+        print("")
+
+        input_admin=(name,adminid,password,adminemail)
+        
+        admin_new="INSERT INTO admin(admin_name,admin_id,password,admin_email)VALUES(%s,%s,%s,%s)"
+        
+
+        mycursor.execute(admin_new,input_admin)
+        
+        mydb.commit()
+        
+        print("Account created successfully")
+        
+        print("")
+        
+
+#---------------------------------
+#This segment allows admin to sign up
+#---------------------------------
+
+
+
+#Administrator login
+
+        
+if(ch==2):
+
+    admin_id=int(input("Enter your ADMIN ID : "))
+    
+    password=input("Enter your PASSWORD : ")
+    
+    print("")
+
+    mycursor.execute("SELECT * FROM admin")
+    
+    check1=mycursor.fetchall()
+
+#CHECKING FOR CORRECT ID AND PASSWORD
+
+    
+    for y in range(0,len(check1)):
+        
+        if(check1[y][0]==admin_id and check1[y][2]==password):
+            
+            print("LOGIN SUCCESSFUL")
+            
+            print("")
+
+
+#---------------------------------
+#This function allows administator to login
+#---------------------------------
+
+
+            print ("Access Authorised,Welcome to administration of LIC Management System",check1[y][1])
+
+
+#--------------------
+#-----Admin Menu-----
+#--------------------
+
+            
+            print("Press 1 to add new record")
+            
+            print("Press 2 for record updation")
+            
+            print("Press 3 for record deletion")
+            
+            print("Press 4 to view existing records")
+    
+            op=int(input("enter your choice"))
+            
+
+#ADDITION OF NEW RECORDS
+
+            
+            if(op==1):
+                n=int(input("Enter the number of records you want to add"))
+            
+                for i in range(n):
+                
+                    pt=input("Enter Plan Type")
+
+                    sa=input("Enter Sum Assured")
+
+                    p=input("Enter Premium")
+
+                    term=input("Enter Term")
+                
+                    sql = "INSERT INTO Policies(PlanType,SumAssured,Premium,Term) VALUES(%s, %s,%s,%s)"
+
+                    val = (pt,sa,p,term)
+
+                    mycursor.execute(sql, val)
+
+                
+                print(mycursor.rowcount, "record(s) inserted")
+                mydb.commit()
+
+
+#UPDATION OF RECORDS
+
+                
+            elif(op==2):
+                n=int(input("Enter the number of records you want to update"))
+            
+                for i in range(n):
+            
+                    pn=input("Enter Plan Type to update")
+
+                    sr=input("Enter new sum assured")
+
+                    pr=input("Enter new premium")
+
+                    tm=input("Enter new term")
+            
+
+                    sql_select_query = "UPDATE Policies SET (SumAssured,Premium,Term )=(%s,%s,%s) WHERE PlanType = (%s)"
+
+                    input1=(sr,pr,tm,pn)
+
+                    mycursor.execute(sql_select_query,input1)
+                
+                print(mycursor.rowcount, "record(s) updated")
+                mydb.commit()
+
+
+#DELETION OF RECORDS
+
+                
+            elif(op==3):
+                no=int(input("Enter the number of records you want to delete"))
+
+            
+                for i in range(no):
+                    pla=input("Enter Plan Type to delete")
+
+                    sql_select_query = "DELETE FROM Policies WHERE PlanType = %s"
+
+                    mycursor.execute(sql_select_query, (pla, ))
+
+                print(mycursor.rowcount, "record(s) deleted")
+
+#VIEWING EXISTING RECORDS
+            elif(op==4):
+
+                mycursor.execute("SELECT * FROM Policies")
+
+                myresult=mycursor.fetchall()
+
+                print(myresult)
+
+            else:
+                print("invalid choice")
+
+
+#Incorrect PASSWORD
+                
+        elif(check1[y][0]==admin_id and check1[y][2]!=password):
+            
+            print("**PASSWORD INCORRECT.TRY AGAIN**")
+            
+            print("")
+
+        else:
+            break
+            
+            
+
+        
+
+
+#USER LOGIN
+
+        
+if(ch==3):
+
+    us=input("Enter your username: ")
+
+    pswd=input("Enter your password: ")
+    
+    mycursor.execute("SELECT * FROM user")
+
+    data=mycursor.fetchall()
+    
+    c=0
+
+    
+    for y in range(0,len(data)):
+        
+        if(data[y][0]==us and data[y][1]==pswd):
+            
+            print("LOGIN SUCCESSFUL")
+
+            print("WELCOME",us)
+
+
+#THIS MODULE IS IMPORTED TO GIVE THE USER A VISUAL OF THE EXISTING POLICIES AND NO OF CUSTOMERS WHO HAVE BOUGHT THE POLICY
+            
+        
+
+#--------------------
+#-----User Menu------
+#--------------------
+
+
+            print("Press 1 to view available policies")
+
+            print("Press 2 to view a particular policy")
+
+            print("Press 3 to buy a policy")
+
+            c=int(input("enter choice"))
+
+            if(c==1):
+
+                mycursor.execute("SELECT PlanType FROM Policies")
+
+                print("THE AVAILABLE POLICIES ARE")
+
+                print(mycursor)
+
+                print("Press 1 if you want to view further details about all plan types")
+
+                r=int(input("enter your choice"))
+
+                if(r==1):
+                    mycursor.execute("SELECT * FROM Policies")
+                    myresult=mycursor.fetchall()
+
+                    print(myresult)
+
+                else:
+                    break
+                    
+
+#THIS ENABLES THE USER TO VIEW A PARTICULAR POLICY
+
+
+            elif(c==2):
+
+                plant=input("Enter the specific plan type to view further details")
+
+                comm="select * from policies where PlanType='%s'"%(plant,)
+            
+                mycursor.execute(comm)
+                b=mycursor.fetchall()
+
+                for x in b:
+                    print(*x, sep='|')
+
+                
+                        
+
+                
+
+                            
+
+
+            elif(c==3):
+
+                plat=input("Enter the specific plan type to buy")
+
+                mycursor.execute("select PlanType from Policies")
+
+                print("Plan Type chosen.")
+
+                x="insert into plan_chosen(username,Ptype) values (%s,%s)"%(us,plat)
+
+
+                mycursor.execute(x)
+                
+                
+
+                mydb.commit()
+          
+
+                
+#Incorrect username(User doesn't exist)
+                
+        
+        elif(data[y][0]!=us and data[y][1]==pswd):
+            
+
+            print("USERNAME INCORRECT. PLEASE TRY AGAIN")
+            break
+
+
+
+    
+#Incorrect Password
+        
+        elif(data[y][0]==us and data[y][1]!=pswd):
+            
+            print("PASSWORD INCORRECT. PLEASE TRY AGAIN")
+            
+            c=c+1
+            
+            print("You have done ",c," attempts ",(5-(c))," remaining.")
+            
+
+            while(c==5):
+                break
+            
+           
+
+
+#THIS OPTION HELPS IN THE NEW USER TO REGISTER 
+
+
+if(ch==4):
+
+    
+    username=input("Enter username")
+
+    password=input("Enter password")
+
+    fname=input("Enter your first name ")
+
+    lname=input("Enter your last name")
+
+    add=input("Enter your address")
+
+    ph=input("Enter your contact number ")
+
+    annin=input("Enter your annual income")
+
+    aadh=input("Enter your Aadhar Card number")
+
+    age=input("Enter your age")
+
+    mycursor.execute("select username from user")
+
+
+
+#THIS IS TO RESTRICT THE DATA TO ENTERED ALREADY EXISTING USERNAME 
+
+    for k in mycursor:
+
+        if(username==k):
+
+            print("username already exists")
+
+        else:
+            continue 
+
+    val=(username,password,fname,lname,add,ph,annin,aadh,age)
+
+    command="INSERT INTO user(username,password,fname,lname,address,phone,annual_income,aadhar,age) VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+
+
+#THIS FUNCTION WILL ASSIGN THE INPUT VALUES TO THE MAIN TABLE 
+
+
+    mycursor.execute(command,val)
+
+    mydb.commit()
+
+    print("User information Added")
+
+   
+
